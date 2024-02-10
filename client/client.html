@@ -5,7 +5,68 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    const handleResponse = (response) => {
+      response.text().then((resText) => {
+        const type = response.headers.get('Accept');
+        const content = document.querySelector('#content');
 
+        switch (response.status) {
+          case 200:
+            content.innerHTML = `<b>Success</b>`;
+            break;
+          case 400:
+            content.innerHTML = `<b>Bad Request</b>`;
+            break;
+          case 401:
+            content.innerHTML = `<b>Unauthorized</b>`;
+            break;
+          case 403:
+            content.innerHTML = `<b>Forbidden</b>`;
+            break;
+          case 404:
+            content.innerHTML = `<b>Resource Not Found</b>`;
+            break;
+          case 500:
+            content.innerHTML = `<b>Internal Server Error</b>`;
+            break;
+          case 501:
+            content.innerHTML = `<b>Not Implemented`;
+        }
+
+        if (type == 'application/json') {
+          const parsedResponse = JSON.parse(resText);
+          console.log(parsedResponse);
+          content.innerHTML += `<p>Message: ${parsedResponse['message']}</p>`;
+        } else if (type == 'text/xml') {
+          const parsedResponse = new window.DOMParser().parseFromString(resText, 'text/xml');
+          console.log(parsedResponse.querySelector('response'));
+          content.innerHTML += `<p>Message: ${parsedResponse.querySelector('message').textContent}</p>`;
+        }
+      });
+    };
+
+    const sendFetchRequest = async (type) => {
+      const url = document.querySelector('#page').value;
+      let response = await fetch(url, {
+        method: 'get',
+        headers: {
+          'Accept': type
+        }
+      });
+      handleResponse(response);
+    };
+
+    const init = () => {
+      const type = document.querySelector('#type');
+      let typeVal = document.querySelector('#type').value;
+      const button = document.querySelector('#send');
+      type.addEventListener("change", () => {
+        typeVal = document.querySelector('#type').value;
+      });
+      button.addEventListener("click",  function() {sendFetchRequest(typeVal)});
+    }
+
+    window.onload = init;
   </script>
 </head>
 <body>
